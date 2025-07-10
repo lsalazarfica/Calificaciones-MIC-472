@@ -1,0 +1,85 @@
+<div id="score-app">
+  <!-- 1. Input de ROL -->
+  <div class="rol-input">
+    <label for="rol">Ingrese su ROL USM:</label>
+    <input type="text" id="rol" placeholder="Ej. 12345678">
+    <button id="buscar">Buscar</button>
+  </div>
+
+  <!-- 2. Resultados (oculto hasta buscar) -->
+  <div id="resultados" style="display:none; margin-top:1rem;">
+    <h2 id="nombre-estudiante"></h2>
+    <div class="notas-grid">
+      <div class="campo"><label>PG1. Diagrama de Flujo</label><input type="text" id="pg1" readonly></div>
+      <div class="campo"><label>PG2. Herramienta Lean</label><input type="text" id="pg2" readonly></div>
+      <div class="campo"><label>PG3. Diagnóstico de Pérdidas</label><input type="text" id="pg3" readonly></div>
+      <div class="campo"><label>PG4. Estrategias de Implementación</label><input type="text" id="pg4" readonly></div>
+      <div class="campo"><label>Promedio Presentación y Trabajos</label><input type="text" id="promedio-presentacion-trabajos" readonly></div>
+      <div class="campo"><label>Tarea 1. VSM</label><input type="text" id="tarea-vsm" readonly></div>
+      <div class="campo"><label>Tarea 2. 5S</label><input type="text" id="tarea-5s" readonly></div>
+      <div class="campo"><label>Promedio Tareas</label><input type="text" id="promedio-tareas" readonly></div>
+      <div class="campo"><label>Proyecto Final</label><input type="text" id="proyecto-final" readonly></div>
+      <div class="campo"><label>Puntos Extra por participación VR</label><input type="text" id="puntos-extra-vr" readonly></div>
+      <div class="campo"><label>Participación Jenga Lean</label><input type="text" id="jenga-lean" readonly></div>
+      <div class="campo"><label>Reporte A3</label><input type="text" id="reporte-a3" readonly></div>
+      <div class="campo"><label>Nota Final</label><input type="text" id="nota-final" readonly></div>
+    </div>
+  </div>
+</div>
+
+<style>
+  #score-app { max-width: 800px; margin: 2rem auto; padding: 1rem; font-family: sans-serif; }
+  .rol-input { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+  .rol-input label { font-weight: bold; }
+  .rol-input input { flex: 1 1 200px; padding: .5rem; font-size: 1rem; }
+  .rol-input button { padding: .5rem 1rem; font-size: 1rem; cursor: pointer; }
+  .notas-grid { display: grid; gap: 1rem; margin-top: 1rem;
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  .campo { display: flex; flex-direction: column; }
+  .campo label { font-weight: bold; margin-bottom: .25rem; font-size: .9rem; }
+  .campo input { padding: .5rem; border: 1px solid #ccc; border-radius: 4px; background: #f9f9f9; }
+</style>
+
+<!-- SheetJS para leer Excel -->
+<script src="https://cdn.sheetjs.com/xlsx-0.19.2/package/dist/xlsx.full.min.js"></script>
+<script>
+  (async () => {
+    // URL de exportación a XLSX de tu Google Sheet:
+    const excelUrl = 'https://docs.google.com/spreadsheets/d/1Bxs8ZE_VHiv5wxTwi8oa5KpCjNXORPU51tvZlgd9u3U/export?format=xlsx';
+    const resp = await fetch(excelUrl);
+    const data = await resp.arrayBuffer();
+    const wb = XLSX.read(data, { type: 'array' });
+    const ws = wb.Sheets['Hoja1'];
+    const rows = XLSX.utils.sheet_to_json(ws);
+
+    const mapCols = {
+      'PG1': 'pg1',
+      'PG2': 'pg2',
+      'PG3': 'pg3',
+      'PG4': 'pg4',
+      'Presentaciones y Trabajos': 'promedio-presentacion-trabajos',
+      'Tarea VSM': 'tarea-vsm',
+      'Tarea 5S': 'tarea-5s',
+      'Tareas': 'promedio-tareas',
+      'Proyecto': 'proyecto-final',
+      'Puntos extra': 'puntos-extra-vr',
+      'Jenga Lean': 'jenga-lean',
+      'Reporte A3': 'reporte-a3',
+      'Nota Final': 'nota-final'
+    };
+
+    document.getElementById('buscar').addEventListener('click', () => {
+      const rol = document.getElementById('rol').value.trim();
+      const alumno = rows.find(r => String(r['ROL USM']) === rol);
+      if (!alumno) {
+        alert('ROL no encontrado. Verifica que sea correcto.');
+        return;
+      }
+      document.getElementById('nombre-estudiante').textContent = alumno['Nombre'] || '';
+      Object.entries(mapCols).forEach(([col, id]) => {
+        document.getElementById(id).value = alumno[col] ?? '';
+      });
+      document.getElementById('resultados').style.display = 'block';
+    });
+  })();
+</script>
